@@ -148,34 +148,88 @@ WHERE speed < ALL (SELECT speed FROM PC)
 Задание: 18
 Найдите производителей самых дешевых цветных принтеров. Вывести: maker, price
 */
+SELECT DISTINCT Product.maker, Printer.price
+FROM Printer JOIN Product ON Product.model = Printer.model
+WHERE Printer.color = 'y' AND Printer.price = 
+(SELECT MIN(price) FROM Printer WHERE color = 'y')
 /*
 Задание: 19
 Для каждого производителя найдите средний размер экрана выпускаемых им ПК-блокнотов. Вывести: maker, средний размер экрана.
 */
+SELECT Product.maker, AVG(screen)
+FROM Laptop JOIN Product ON Product.model = Laptop.model
+GROUP BY Product.maker
 /*
 Задание: 20
 Найдите производителей, выпускающих по меньшей мере три различных модели ПК. Вывести: Maker, число моделей
 */
+SELECT maker, COUNT(model)
+FROM Product
+WHERE type = 'PC'
+GROUP BY maker
+HAVING COUNT(model) >= 3
 /*
 Задание: 21
 Найдите максимальную цену ПК, выпускаемых каждым производителем. Вывести: maker, максимальная цена.
 */
+SELECT Product.maker, MAX(price)
+FROM PC JOIN Product ON Product.model = PC.model
+GROUP BY Product.maker
 /*
 Задание: 22
 Для каждого значения скорости ПК, превышающего 600 МГц, определите среднюю цену ПК с такой же скоростью. Вывести: speed, средняя цена.
 */
+SELECT speed, AVG(price)
+FROM PC
+WHERE speed > 600
+GROUP BY speed
 /*
 Задание: 23
 Найдите производителей, которые производили бы как ПК со скоростью не менее 750 МГц, так и ПК-блокноты со скоростью не менее 750 МГц. Вывести: Maker
 */
+SELECT Product.maker
+FROM Product JOIN PC ON Product.model = PC.model
+WHERE PC.speed >= 750
+INTERSECT
+SELECT Product.maker
+FROM Product JOIN Laptop ON Product.model = Laptop.model
+WHERE Laptop.speed >= 750
 /*
 Задание: 24
 Перечислите номера моделей любых типов, имеющих самую высокую цену по всей имеющейся в базе данных продукции.
 */
+SELECT model FROM ( 
+SELECT model, price
+FROM PC
+UNION
+SELECT model, price
+FROM Laptop
+UNION
+SELECT model, price
+FROM Printer) AS p1
+
+WHERE price = (
+SELECT MAX(price) FROM (
+SELECT price FROM PC 
+UNION 
+SELECT price FROM Laptop
+UNION
+SELECT price FROM Printer
+) AS p2
+)
 /*
 Задание: 25
 Найдите производителей принтеров, которые производят ПК с наименьшим объемом RAM и с самым быстрым процессором среди всех ПК, имеющих наименьший объем RAM. Вывести: Maker
 */
+SELECT DISTINCT maker
+FROM Product
+WHERE type = 'printer' AND maker IN(
+SELECT maker
+FROM Product JOIN PC ON Product.model = PC.model
+WHERE ram = (SELECT MIN(ram) FROM PC) AND 
+speed = (SELECT MAX(speed) FROM PC 
+WHERE speed IN(SELECT speed FROM PC
+WHERE ram = (SELECT MIN(ram) FROM PC))))
 
 
 
